@@ -1,0 +1,11 @@
+aiogram>=3.17.0
+SQLAlchemy~=2.0.36
+alembic~=1.14.0
+python-dotenv~=1.0.1
+asyncpg~=0.29.0
+black~=24.1.0
+httpx==0.24.1
+aio-pika~=9.4.1
+pydantic~=2.7.1
+pydantic-settings~=2.2.1
+openai~=1.64.0
