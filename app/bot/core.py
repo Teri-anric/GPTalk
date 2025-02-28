@@ -11,7 +11,7 @@ from app.bot.ai_provider import AIProvider
 from app.config import settings
 
 from .handlers import index_router
-from .middlewares import DatabaseMiddleware, UserMiddleware
+from .middlewares import DatabaseMiddleware
 
 logger = getLogger(__name__)
 
@@ -27,7 +27,6 @@ dp = Dispatcher()
 
 # Setup middleware
 dp.update.middleware(DatabaseMiddleware())
-dp.message.middleware(UserMiddleware())
 
 # Setup routers
 dp.include_router(index_router)

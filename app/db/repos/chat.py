@@ -1,9 +1,7 @@
-from datetime import datetime
-
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, insert
+from sqlalchemy import insert, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.future import select
-from sqlalchemy.orm import relationship, selectinload
+from sqlalchemy.orm import selectinload
 
 from app.db.models import Chat, ChatAISettings
 from app.db.repos.base import BaseRepository
@@ -23,20 +21,19 @@ class ChatRepository(BaseRepository):
         :param chat_id: Unique Telegram chat ID
         :param title: Chat title
         :param username: Chat username
+
         :return: Chat object
         """
-        # Prepare the insert statement with on_conflict_do_update
-        result = await self.db.execute(
-            insert(Chat)
+        await self.db.execute(
+            pg_insert(Chat)
             .values(id=chat_id, title=title, username=username)
             .on_conflict_do_update(
-                index_elements=["chat_id"], set_={"title": title, "username": username}
+                index_elements=["id"], set_={"title": title, "username": username}
             )
-            .returning(select(Chat).options(selectinload(Chat.ai_settings)))
         )
 
         await self.db.commit()
-        return result.scalar_one()
+        return await self.get_chat_by_id(chat_id)
 
     async def get_chat_by_id(self, chat_id: int) -> Chat:
         """
@@ -45,17 +42,41 @@ class ChatRepository(BaseRepository):
         :param chat_id: Unique chat ID
         :return: Chat object or None
         """
-        result = await self.db.execute(select(Chat).where(Chat.id == chat_id))
+        result = await self.db.execute(
+            select(Chat).where(Chat.id == chat_id).options(selectinload(Chat.ai_settings))
+        )
         return result.scalar_one_or_none()
 
     async def update_prompt(self, chat_id: int, prompt: str):
         """
         Update the prompt for a chat.
         """
-        await self.db.execute(
-            insert(ChatAISettings).values(chat_id=chat_id, prompt=prompt)
-            .on_conflict_do_update(
-                index_elements=["chat_id"], set_={"prompt": prompt}
-            )
+        result = await self.db.execute(
+            update(ChatAISettings)
+            .where(ChatAISettings.chat_id == chat_id)
+            .values(prompt=prompt)
         )
         await self.db.commit()
+        
+        if result.rowcount == 0:
+            await self.db.execute(
+                insert(ChatAISettings).values(chat_id=chat_id, prompt=prompt)
+            )
+            await self.db.commit()
+
+    async def update_provider(self, chat_id: int, provider: str):
+        """
+        Update the provider for a chat.
+        """
+        result = await self.db.execute(
+            update(ChatAISettings)
+            .where(ChatAISettings.chat_id == chat_id)
+            .values(provider=provider)
+        )
+        await self.db.commit()
+
+        if result.rowcount == 0:
+            await self.db.execute(
+                insert(ChatAISettings).values(chat_id=chat_id, provider=provider)
+            )
+            await self.db.commit()

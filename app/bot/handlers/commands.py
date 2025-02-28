@@ -40,31 +40,3 @@ async def help_command(message: Message):
     /start - Start the bot
     """
     )
-
-
-@router.message(Command("set-prompt"))
-async def set_command(message: Message, command: CommandObject, db: DBReposContext):
-    """
-    Handle the /set-prompt command to set the bot's prompt.
-
-    Args:
-        message (Message): The incoming Telegram message with the /set command.
-    """
-    prompt = command.args
-    if not prompt and message.reply_to_message is not None:
-        prompt = message.reply_to_message.text
-    
-    if prompt is None:
-        await message.answer("Please provide a prompt to set.")
-        return
-    
-    await db.chat.update_prompt(message.chat.id, prompt)
-    await message.answer(f"Prompt set to: {prompt}")
-
-
-@router.message(Command("set-model"))
-async def set_model_command(message: Message, command: CommandObject):
-    """
-    Handle the /set-model command to set the bot's model.
-    """
-    await message.answer("Model set to: gpt-4o-mini")

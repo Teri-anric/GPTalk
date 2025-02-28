@@ -17,5 +17,5 @@ class Chat(Base, TimestampMixin):
     username = Column(String, nullable=True)
 
     ai_settings: "ChatAISettings | None" = relationship(
-        "ChatAISettings", back_populates="chat"
+        "ChatAISettings"
     )

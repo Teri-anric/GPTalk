@@ -1,10 +1,10 @@
 from datetime import datetime
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING
-
+import uuid
 from sqlalchemy import (
     BigInteger,
-    Boolean,
+    UUID,
     Column,
     DateTime,
     Enum,
@@ -34,7 +34,8 @@ class MessageType(PyEnum):
 class Message(Base, TimestampMixin):
     __tablename__ = "messages"
 
-    id: int = Column(BigInteger, primary_key=True)
+    id: int = Column(UUID, primary_key=True, default=uuid.uuid4)
+
     type: MessageType = Column(
         Enum(MessageType), nullable=False, default=MessageType.TEXT
     )
@@ -42,10 +43,12 @@ class Message(Base, TimestampMixin):
     payload: dict = Column(JSON, nullable=True, default=None)
     send_at: datetime = Column(DateTime)
 
-    reply_to_id: int = Column(BigInteger, ForeignKey("messages.id"), nullable=True)
+    reply_to_id: int = Column(BigInteger, nullable=True)
     from_user_id: int = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     chat_id: int = Column(BigInteger, ForeignKey("chats.id"), nullable=False)
 
+    telegram_id: int = Column(BigInteger, nullable=True)
+
     from_user: "User" = relationship("User")
     chat: "Chat" = relationship("Chat")
-    reply_to: "Message" = relationship("Message", back_populates="reply_to")
+    # reply_to: "Message" = relationship("Message", primaryjoin="Message.reply_to_id == Message.id")

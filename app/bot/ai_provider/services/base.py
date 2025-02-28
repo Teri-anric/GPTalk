@@ -12,7 +12,7 @@ class AiResponse(BaseModel):
 
 class BaseAIService(ABC):
     @abstractmethod
-    def generate_response(
+    async def generate_response(
         self, prompt: str, messages: list[dict], tools: list[BaseTool]
     ) -> AiResponse:
         pass

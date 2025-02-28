@@ -6,7 +6,7 @@ services:
     container_name: gptalk-app
     command: ["python", "-m", "app.bot"]
     depends_on:
-      - postgres
+      - db
     env_file:
       - .env
     volumes:
@@ -14,19 +14,19 @@ services:
     networks:
       - gptalk_network
 
-  postgres:
+  db:
     image: postgres:15-alpine
     env_file:
       - .env
     environment:
-      - POSTGRES_DB=${DATABASE__NAME}
-      - POSTGRES_USER=${DATABASE__USER}
-      - POSTGRES_PASSWORD=${DATABASE__PASSWORD}
-      - POSTGRES_PORT=${DATABASE__PORT}
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_PORT=${DATABASE_PORT}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    expose:
-      - ${DATABASE__PORT}
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
     networks:
       - gptalk_network
 

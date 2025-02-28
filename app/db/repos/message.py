@@ -16,6 +16,7 @@ class MessageRepository(BaseRepository):
         type: MessageType,
         content: str,
         send_at: datetime,
+        telegram_id: int = None,
         payload: dict = None,
         reply_to_id: int = None,
     ) -> Message:
@@ -34,16 +35,21 @@ class MessageRepository(BaseRepository):
         Returns:
             Message: The newly created message.
         """
+        # Convert send_at to naive datetime by removing timezone info
+        send_at_naive = (
+            send_at.replace(tzinfo=None) if send_at.tzinfo is not None else send_at
+        )
+
         result = await self.db.execute(
             insert(Message).values(
                 chat_id=chat_id,
                 from_user_id=from_user_id,
                 content=content,
                 type=type,
-                send_at=send_at,
+                send_at=send_at_naive,
                 reply_to_id=reply_to_id,
                 payload=payload,
-            )
+            ).returning(Message)
         )
         await self.db.commit()
         return result.scalar_one()

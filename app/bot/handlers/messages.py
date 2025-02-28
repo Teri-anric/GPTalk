@@ -2,7 +2,6 @@
 Handlers for incoming messages from users.
 """
 
-import json
 from datetime import datetime
 
 from aiogram import F, Router, Bot
@@ -14,16 +13,16 @@ from app.db.models.messages import Message, MessageType
 from app.db.models.user import User
 
 from ..ai_provider import AIProvider
-from ..ai_provider.tools.base import BaseTool
+from ..ai_provider.tools import BaseTool, AnswerTool
 
 router = Router()
 
 
 async def _prepare_messages(prompt: str, messages: list[Message]) -> list[dict]:
-    messages = [{"role": "system", "content": prompt}]
+    conversation = [{"role": "system", "content": prompt}]
     for message in messages:
         if message.type == MessageType.TOOL_CALL:
-            messages.extend(
+            conversation.extend(
                 [
                     {
                         "role": "tool",
@@ -34,8 +33,10 @@ async def _prepare_messages(prompt: str, messages: list[Message]) -> list[dict]:
             )
             continue
         # default to show content of the message
-        messages.append({"role": "user", "content": message.content})
-    return messages
+        if message.content is None:
+            continue
+        conversation.append({"role": "user", "content": message.content})
+    return conversation
 
 
 async def _process_tool_call(
@@ -55,7 +56,7 @@ async def _process_tool_call(
             type=MessageType.TOOL_CALL,
             content="",
             payload={"tool_call_id": tool.tool_call_id, "result": result_tool},
-            send_at=datetime.now(),
+            send_at=datetime.now()
         )
 
 
@@ -74,13 +75,8 @@ async def message_handler(
     Args:
         message (Message): The incoming Telegram message.
     """
-    await db.message.create_message(
-        chat_id=db_chat.id,
-        from_user_id=db_user.id,
-        type=MessageType.TEXT,
-        content=message.text,
-        send_at=message.date,
-    )
+    await message.answer("Processing...")
+
     if db_chat.ai_settings is None:
         return  # bot is not configured to answer in this chat
 
@@ -96,7 +92,7 @@ async def message_handler(
         messages=await _prepare_messages(
             prompt=db_chat.ai_settings.prompt, messages=messages
         ),
-        tools=[],
+        tools=[AnswerTool],
     )
 
     await _process_tool_call(
