@@ -1,20 +1,16 @@
 import inspect
-
-from pydantic import BaseModel
+from typing import Any
+from pydantic import BaseModel, PrivateAttr
 
 
 class BaseTool(BaseModel):
     __name__: str
 
-    __tool_call_id: str
+    _extra_payload: dict = PrivateAttr(default_factory=dict)
 
     @property
-    def tool_call_id(self) -> str:
-        return self.__tool_call_id
-
-    @tool_call_id.setter
-    def tool_call_id(self, value: str):
-        self.__tool_call_id = value
+    def extra_payload(self) -> dict:
+        return self._extra_payload
 
     async def __call__(self):
         pass
@@ -32,3 +28,7 @@ class BaseTool(BaseModel):
             return kwargs
 
         return {k: kwargs[k] for k in params if k in kwargs}
+
+    def __init__(self, /, **data: Any) -> None:
+        super().__init__(**data)
+        self._extra_payload = data.pop("_extra_payload", {})

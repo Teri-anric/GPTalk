@@ -65,7 +65,6 @@ class DatabaseMiddleware(BaseMiddleware):
             from_user_id=user_id,
             type=MessageType.TEXT,
             content=message.text,
-            send_at=message.date,
             telegram_id=message.message_id,
             reply_to_id=reply_to_id,
         )
@@ -85,10 +84,10 @@ class DatabaseMiddleware(BaseMiddleware):
             if event_context is not None:
                 data["db_chat"] = await self._resolve_db_chat(db, event_context.chat)
                 data["db_user"] = await self._resolve_db_user(db, event_context.user)
-            if isinstance(event, TelegramMessage):
+            if event.message is not None:
                 data["db_message"] = await self._resolve_db_message(
                     db,
-                    event,
+                    event.message,
                     chat_id=event_context.chat_id,
                     user_id=event_context.user_id,
                 )

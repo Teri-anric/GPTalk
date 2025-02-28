@@ -6,7 +6,7 @@ from ..tools.base import BaseTool
 
 
 class AiResponse(BaseModel):
-    response: str
+    response: str | None = None
     tools: list[BaseTool]
 
 

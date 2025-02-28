@@ -17,13 +17,15 @@ from sqlalchemy.orm import relationship
 from .base import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from .chats import Chat
-    from .users import User
+    from .chat import Chat
+    from .user import User
 
 
 class MessageType(PyEnum):
     TEXT = "text"
-    TOOL_CALL = "tool_call"
+    TOOL_CALLS = "tool_calls"
+    AI_REFLECTION = "ai_reflection"
+    # TRIGGER = "trigger"
     # IMAGE = "image"
     # AUDIO = "audio"
     # VIDEO = "video"

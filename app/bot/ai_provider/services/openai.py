@@ -2,6 +2,7 @@ import json
 
 from openai import OpenAI
 from openai.lib import pydantic_function_tool
+from openai.types.chat import ChatCompletion
 
 from app.config import settings
 
@@ -17,7 +18,9 @@ class OpenAIService(BaseAIService):
     def tools_to_openai(self, tools: list[BaseTool]) -> list[dict] | None:
         return [pydantic_function_tool(tool) for tool in tools] or None
 
-    def extract_tools(self, response, tools: list[BaseTool] | None = None) -> list[BaseTool]:
+    def extract_tools(
+        self, response: ChatCompletion, tools: list[BaseTool] | None = None
+    ) -> list[BaseTool]:
         if tools is None:
             return []
         if response.choices[0].message.tool_calls is None:
@@ -30,11 +33,18 @@ class OpenAIService(BaseAIService):
             tool_cls = tools_map.get(tool.function.name)
             if tool_cls is None:
                 continue
-            tools.append(tool_cls(**json.loads(tool.function.arguments)))
+            tools.append(
+                tool_cls(
+                    **json.loads(tool.function.arguments),
+                    _extra_payload=tool.model_dump(),
+                )
+            )
 
         return tools
 
-    async def generate_response(self, messages: list[dict], tools: list[BaseTool]) -> AiResponse:
+    async def generate_response(
+        self, messages: list[dict], tools: list[BaseTool]
+    ) -> AiResponse:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,

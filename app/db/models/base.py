@@ -16,6 +16,9 @@ class Base(DeclarativeBase):
 
     metadata = MetaData()
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({', '.join([f'{k}={v}' for k, v in self.__dict__.items() if not k.startswith('_')])})"
+
 
 class TimestampMixin:
     """

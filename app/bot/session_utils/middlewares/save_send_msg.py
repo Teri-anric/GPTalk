@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Type
+from datetime import datetime
 
-from aiogram.bot import Bot
+from aiogram import Bot
 from aiogram.client.session.middlewares.base import (
     BaseRequestMiddleware,
     NextRequestMiddlewareType,
@@ -26,12 +26,20 @@ class SaveSendMsg(BaseRequestMiddleware):
         bot: Bot,
         method: TelegramMethod[TelegramType],
     ) -> Response[TelegramType]:
-        if isinstance(method, SendMessage):
-            await self.message_repo.create_message(
-                chat_id=method.chat_id,
-                from_user_id=bot.id,
-                type=MessageType.TEXT,
-                content=method.text,
-            )
+        response = await make_request(bot, method)
 
-        return await make_request(bot, method)
+        if not isinstance(method, SendMessage) or method.model_extra.get("no_save", False):
+            return response
+        method: SendMessage
+
+        await self.message_repo.create_message(
+            telegram_id=response.message_id,
+
+            chat_id=method.chat_id,
+            from_user_id=bot.id,
+            reply_to_id=method.reply_to_message_id,
+
+            type=MessageType.TEXT,
+            content=method.text,
+            payload=None,
+        )
