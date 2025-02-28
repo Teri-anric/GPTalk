@@ -1,6 +1,6 @@
 import time
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from dataclasses import dataclass, field
 from .logger import logger
 
@@ -90,7 +90,7 @@ class BackgroundChatsProcessor:
         )
 
     async def _update_chats(self):
-        last_processed = time.time() - DEFAULT_MAX_DELAY
+        last_processed = datetime.now() - timedelta(seconds=DEFAULT_MIN_DELAY)
         while True:
             # Get updated chats
             logger.info("Updating chats")
@@ -104,5 +104,5 @@ class BackgroundChatsProcessor:
                 chat_info.set_last_updated(time.time())
                 logger.info(f"Updated chat info for chat: {chat_id}")
             logger.info(f"Updated {len(chat_ids)} chats")
+            last_processed = datetime.now()
             await asyncio.sleep(DEFAULT_MIN_DELAY)
-            last_processed = time.time()
