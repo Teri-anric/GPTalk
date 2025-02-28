@@ -5,8 +5,8 @@ from aiogram.types import CallbackQuery, Message
 
 from app.bot.callback import SetProviderCallbackData
 from app.bot.keyboards import get_providers_keyboard
-from app.bot.middlewares.context import DBReposContext
-from app.db.models import Chat
+from app.db import DBReposContext
+from app.db import Chat
 
 router = Router()
 

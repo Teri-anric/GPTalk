@@ -5,8 +5,8 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.db.models import User
-from app.db.repos.base import BaseRepository
+from app.db import User
+from .base import BaseRepository
 
 
 class UserRepository(BaseRepository):

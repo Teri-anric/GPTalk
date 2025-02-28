@@ -8,6 +8,6 @@ from .base import Base
 from .chat import Chat
 from .user import User
 from .chat_ai_settings import ChatAISettings
-from .messages import Message
+from .messages import Message, MessageType
 
-__all__ = ["Base", "User", "Chat", "ChatAISettings", "Message"]
+__all__ = ["Base", "User", "Chat", "ChatAISettings", "Message", "MessageType"]

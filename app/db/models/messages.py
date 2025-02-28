@@ -43,7 +43,6 @@ class Message(Base, TimestampMixin):
     )
     content: str = Column(String, default="", nullable=False)
     payload: dict = Column(JSON, nullable=True, default=None)
-    send_at: datetime = Column(DateTime)
 
     reply_to_id: int = Column(BigInteger, nullable=True)
     from_user_id: int = Column(BigInteger, ForeignKey("users.id"), nullable=True)

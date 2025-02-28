@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
 from aiogram.types import Message
 
-from app.bot.middlewares.context import DBReposContext
+from app.db import DBReposContext
 
 router = Router()
 

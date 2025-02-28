@@ -2,9 +2,8 @@
 Module for the base model.
 """
 
-from sqlalchemy import Column, DateTime, MetaData
+from sqlalchemy import Column, MetaData, TIMESTAMP, func
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.sql import func
 
 
 class Base(DeclarativeBase):
@@ -26,10 +25,10 @@ class TimestampMixin:
     """
 
     created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        TIMESTAMP, server_default=func.now(), nullable=False
     )
     updated_at = Column(
-        DateTime(timezone=True),
+        TIMESTAMP,
         onupdate=func.now(),
         nullable=False,
         server_default=func.now(),

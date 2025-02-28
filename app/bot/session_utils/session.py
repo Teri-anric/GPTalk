@@ -1,6 +1,6 @@
 from aiogram.client.session.aiohttp import AiohttpSession
 
-from app.db.repos import MessageRepository
+from app.db import MessageRepository
 from .middlewares import SaveSendMsg
 
 class SessionUtils(AiohttpSession):

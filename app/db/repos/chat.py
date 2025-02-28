@@ -1,10 +1,10 @@
-from sqlalchemy import insert, update
+from sqlalchemy import insert, update, or_, exists
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.db.models import Chat, ChatAISettings
-from app.db.repos.base import BaseRepository
+from app.db import Chat, ChatAISettings, Message
+from .base import BaseRepository
 
 
 class ChatRepository(BaseRepository):
@@ -80,3 +80,19 @@ class ChatRepository(BaseRepository):
                 insert(ChatAISettings).values(chat_id=chat_id, provider=provider)
             )
             await self.db.commit()
+
+    async def get_updated_chats(self, last_processed: float) -> list[int]:
+        """
+        Get chats that have been updated after the given timestamp.
+        """
+        result = await self.db.execute(
+            select(Chat.id).where(or_(
+                Chat.updated_at > last_processed, 
+                Chat.created_at > last_processed,
+                exists(select(Message).where(
+                    Message.chat_id == Chat.id, 
+                    Message.created_at > last_processed
+                ))
+            ))
+        )
+        return result.scalars().all()

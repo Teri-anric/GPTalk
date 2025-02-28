@@ -13,10 +13,10 @@ from aiogram.types import (
 )
 from aiogram.fsm.middleware import EVENT_CONTEXT_KEY, EventContext
 
-from app.bot.middlewares.context import DBReposContext
-from app.db.conn import get_async_session
-from app.db.models import Chat as DBChat, User as DBUser, Message as DBMessage
-from app.db.models.messages import MessageType
+from app.db import DBReposContext
+from app.db import get_async_session
+from app.db import Chat as DBChat, User as DBUser, Message as DBMessage
+from app.db import MessageType
 
 
 class DatabaseMiddleware(BaseMiddleware):

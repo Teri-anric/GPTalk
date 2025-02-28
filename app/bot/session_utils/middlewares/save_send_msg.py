@@ -8,8 +8,8 @@ from aiogram.client.session.middlewares.base import (
 from aiogram.methods import SendMessage, TelegramMethod
 from aiogram.methods.base import Response, TelegramType
 
-from app.db.models.messages import MessageType
-from app.db.repos import MessageRepository
+from app.db import MessageType
+from app.db import MessageRepository
 
 
 class SaveSendMsg(BaseRequestMiddleware):

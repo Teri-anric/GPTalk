@@ -14,6 +14,21 @@ services:
     networks:
       - gptalk_network
 
+  worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: gptalk-worker
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    networks:
+      - gptalk_network
+
   db:
     image: postgres:15-alpine
     env_file:

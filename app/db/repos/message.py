@@ -1,9 +1,7 @@
-from datetime import datetime
-
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from app.db.models.messages import Message, MessageType
+from app.db import Message, MessageType
 
 from .base import BaseRepository
 
@@ -24,10 +22,10 @@ class MessageRepository(BaseRepository):
 
         Args:
             chat_id (int): The ID of the chat.
-            from_user_id (int): The ID of the user who sent the message.
             type (MessageType): The type of the message.
+            from_user_id (int): The ID of the user who sent the message.
             content (str): The content of the message.
-            send_at (datetime): The date and time the message was sent.
+            telegram_id (int): The ID of the message in Telegram.
             payload (dict): Additional data associated with the message.
             reply_to_id (int): The ID of the message being replied to.
 
@@ -40,7 +38,6 @@ class MessageRepository(BaseRepository):
                 from_user_id=from_user_id,
                 type=type,
                 content=content or "",
-                send_at=datetime.now(),
                 reply_to_id=reply_to_id,
                 telegram_id=telegram_id,
                 payload=payload,
@@ -64,7 +61,7 @@ class MessageRepository(BaseRepository):
         result = await self.db.execute(
             select(Message)
             .where(Message.chat_id == chat_id)
-            .order_by(Message.send_at.desc())
+            .order_by(Message.created_at.desc())
             .limit(limit)
         )
 

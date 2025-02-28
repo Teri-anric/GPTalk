@@ -16,3 +16,5 @@ TEXT_MESSAGE_IN_CHAT = """
 {user_message}
 </user_message>
 """
+
+NOT_RESPONSE_TOOL_MESSAGE = "**Tool call not completed**"

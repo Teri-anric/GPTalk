@@ -2,8 +2,9 @@
 Middleware for managing context in Telegram bot interactions.
 """
 
-from app.db.conn import AsyncSession
-from app.db.repos import ChatRepository, MessageRepository, UserRepository
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .repos import ChatRepository, MessageRepository, UserRepository
 
 
 class DBReposContext:
