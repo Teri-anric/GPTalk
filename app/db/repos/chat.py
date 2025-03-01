@@ -125,6 +125,6 @@ class ChatRepository(BaseRepository):
             chats_updated = await session.execute(
                 select(Message.chat_id).where(
                     Message.created_at > last_processed
-                )
+                ).group_by(Message.chat_id)
             )
             return chats_updated.scalars().all()

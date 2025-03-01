@@ -116,13 +116,13 @@ class BackgroundChatsProcessor:
             for chat_setting in chats_settings:
                 chat_info = self._set_default_chat_info(chat_setting.chat_id)
                 chat_info.update_settings(chat_setting)
-                chat_info.set_last_updated(last_processed)
+                chat_info.set_last_updated(last_processed.timestamp())
                 logger.info(f"Updated chat info for chat: {chat_setting.chat_id}")
             # Update last processed
             chat_ids = await db.chat.get_awaible_new_messages_in_chats(last_processed)
             for chat_id in chat_ids:
                 chat_info = self._set_default_chat_info(chat_id)
-                chat_info.set_last_updated(last_processed)
+                chat_info.set_last_updated(last_processed.timestamp())
                 logger.info(f"Updated chat info for chat: {chat_id}")
             last_processed = datetime.now()
             await asyncio.sleep(MINIMAL_SLEEP)
