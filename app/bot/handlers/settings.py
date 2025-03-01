@@ -86,7 +86,9 @@ async def provider_callback(
 
 
 @router.callback_query(
-    AdjustSettingCallbackData.filter(F.setting == "provider" & F.action == "back")
+    AdjustSettingCallbackData.filter(
+        (F.setting == "provider") & (F.action == "back")
+    )
 )
 async def provider_back_callback(
     callback: CallbackQuery, db_chat: Chat, callback_data: AdjustSettingCallbackData
