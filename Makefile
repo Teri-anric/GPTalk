@@ -1,14 +1,14 @@
 build:
-	docker compose build
+	docker compose build $(args)
 
 up:
-	docker compose up -d
+	docker compose up -d $(args)
 
 run:
-	docker compose up
+	docker compose up $(args)
 
 down:
-	docker compose down
+	docker compose down $(args)
 
 migrate:
 	docker compose up -d db

@@ -7,6 +7,7 @@ from datetime import datetime
 from app.db import Chat, ChatAISettings, Message
 from .base import BaseRepository
 
+UNSET = object()
 
 class ChatRepository(BaseRepository):
     """
@@ -56,41 +57,50 @@ class ChatRepository(BaseRepository):
                 await session.commit()
             return chat
 
-    async def update_prompt(self, chat_id: int, prompt: str):
+
+    async def update_ai_settings(
+        self,
+        chat_id: int,
+        prompt: str = UNSET,
+        provider: str = UNSET,
+        messages_context_limit: int = UNSET,
+        max_not_response_time: int | None = UNSET,
+        min_delay_between_messages: int | None = UNSET,
+    ):
         """
-        Update the prompt for a chat.
+        Update the AI settings for a chat.
         """
         async with self.async_session() as session:
+            data = {}
+            if prompt is not UNSET:
+                data["prompt"] = prompt
+            if provider is not UNSET:
+                data["provider"] = provider
+            if messages_context_limit is not UNSET:
+                data["messages_context_limit"] = messages_context_limit
+            if max_not_response_time is not UNSET:
+                data["max_not_response_time"] = max_not_response_time
+            if min_delay_between_messages is not UNSET:
+                data["min_delay_between_messages"] = min_delay_between_messages
+            
             result = await session.execute(
                 update(ChatAISettings)
                 .where(ChatAISettings.chat_id == chat_id)
-                .values(prompt=prompt)
+                .values(
+                    **data
+                )
             )
             await session.commit()
 
             if result.rowcount == 0:
                 await session.execute(
-                    insert(ChatAISettings).values(chat_id=chat_id, prompt=prompt)
+                    insert(ChatAISettings).values(
+                        chat_id=chat_id,
+                        **data
+                    )
                 )
                 await session.commit()
 
-    async def update_provider(self, chat_id: int, provider: str):
-        """
-        Update the provider for a chat.
-        """
-        async with self.async_session() as session:
-            result = await session.execute(
-                update(ChatAISettings)
-                .where(ChatAISettings.chat_id == chat_id)
-                .values(provider=provider)
-            )
-            await session.commit()
-
-            if result.rowcount == 0:
-                await session.execute(
-                    insert(ChatAISettings).values(chat_id=chat_id, provider=provider)
-                )
-                await session.commit()
 
     async def get_updated_chats(self, last_processed: datetime) -> list[int]:
         """
