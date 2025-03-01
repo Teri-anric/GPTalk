@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: gptalk-app
     restart: always
-    command: ["python", "-m", "app.bot"]
+    command: ["bash", "/app/entrypoint.sh"]
     depends_on:
       - db
     env_file:
