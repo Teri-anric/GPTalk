@@ -31,7 +31,7 @@ class ChatProcessInfo:
         if self.last_updated >= self.last_processed:
             is_ready = True
         # Check min delay
-        if self.min_delay_between_messages is not None:
+        if is_ready and self.min_delay_between_messages is not None:
             is_ready = time_diff > self.min_delay_between_messages
         # Update last processed
         if is_ready:
