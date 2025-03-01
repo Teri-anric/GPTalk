@@ -50,6 +50,6 @@ class Message(Base, TimestampMixin):
 
     telegram_id: int = Column(BigInteger, nullable=True)
 
-    from_user: "User" = relationship("User")
+    from_user: "User | None" = relationship("User")
     chat: "Chat" = relationship("Chat")
     # reply_to: "Message" = relationship("Message", primaryjoin="Message.reply_to_id == Message.id")

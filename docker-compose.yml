@@ -4,9 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: gptalk-app
+    restart: unless-stoppeds
     command: ["python", "-m", "app.bot"]
     depends_on:
-      - db
+      - db:
+          condition: service_healthy
     env_file:
       - .env
     volumes:
@@ -19,9 +21,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: gptalk-worker
+    restart: unless-stopped
     command: ["python", "-m", "app.worker"]
     depends_on:
-      - db
+      - db:
+          condition: service_healthy
     env_file:
       - .env
     volumes:
@@ -44,6 +48,11 @@ services:
       - ${DATABASE_PORT}:${DATABASE_PORT}
     networks:
       - gptalk_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER}", "-d", "${DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

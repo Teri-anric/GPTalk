@@ -30,30 +30,31 @@ class UserRepository(BaseRepository):
         :param username: User's Telegram username
         :return: User object
         """
-        result = await self.db.execute(
-            insert(User)
-            .values(
-                id=user_id,
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
+        async with self.async_session() as session:
+            result = await session.execute(
+                insert(User)
+                    .values(
+                    id=user_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    username=username,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+                .on_conflict_do_update(
+                    index_elements=["id"],
+                    set_={
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "username": username,
+                        "updated_at": datetime.utcnow(),
+                    },
+                )
+                .returning(User)
             )
-            .on_conflict_do_update(
-                index_elements=["id"],
-                set_={
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "username": username,
-                    "updated_at": datetime.utcnow(),
-                },
-            )
-            .returning(User)
-        )
 
-        await self.db.commit()
-        return result.scalar_one()
+            await session.commit()
+            return result.scalar_one()
 
     async def get_user_by_id(self, user_id: int) -> User:
         """
@@ -62,5 +63,6 @@ class UserRepository(BaseRepository):
         :param user_id: Unique Telegram user ID
         :return: User object or None
         """
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        return result.scalar_one_or_none()
+        async with self.async_session() as session:
+            result = await session.execute(select(User).where(User.id == user_id))
+            return result.scalar_one_or_none()

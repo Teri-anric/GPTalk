@@ -14,7 +14,6 @@ from aiogram.types import (
 from aiogram.fsm.middleware import EVENT_CONTEXT_KEY, EventContext
 
 from app.db import DBReposContext
-from app.db import get_async_session
 from app.db import Chat as DBChat, User as DBUser, Message as DBMessage
 from app.db import MessageType
 
@@ -77,18 +76,17 @@ class DatabaseMiddleware(BaseMiddleware):
     ) -> Any:
         event_context: EventContext | None = data.get(EVENT_CONTEXT_KEY)
 
-        async with get_async_session() as session:
-            db = DBReposContext(session)
+        db = DBReposContext()
 
-            data["db"] = db
-            if event_context is not None:
-                data["db_chat"] = await self._resolve_db_chat(db, event_context.chat)
-                data["db_user"] = await self._resolve_db_user(db, event_context.user)
-            if event.message is not None:
-                data["db_message"] = await self._resolve_db_message(
-                    db,
-                    event.message,
-                    chat_id=event_context.chat_id,
-                    user_id=event_context.user_id,
-                )
-            return await handler(event, data)
+        data["db"] = db
+        if event_context is not None:
+            data["db_chat"] = await self._resolve_db_chat(db, event_context.chat)
+            data["db_user"] = await self._resolve_db_user(db, event_context.user)
+        if event.message is not None:
+            data["db_message"] = await self._resolve_db_message(
+                db,
+                event.message,
+                chat_id=event_context.chat_id,
+                user_id=event_context.user_id,
+            )
+        return await handler(event, data)

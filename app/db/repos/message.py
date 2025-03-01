@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import selectinload
 
 from app.db import Message, MessageType
 
@@ -32,20 +33,21 @@ class MessageRepository(BaseRepository):
         Returns:
             Message: The newly created message.
         """
-        result = await self.db.execute(
-            insert(Message).values(
-                chat_id=chat_id,
-                from_user_id=from_user_id,
-                type=type,
-                content=content or "",
-                reply_to_id=reply_to_id,
-                telegram_id=telegram_id,
-                payload=payload,
-            ).returning(Message)
-        )
+        async with self.async_session() as session:
+            result = await session.execute(
+                insert(Message).values(
+                    chat_id=chat_id,
+                    from_user_id=from_user_id,
+                    type=type,
+                    content=content or "",
+                    reply_to_id=reply_to_id,
+                    telegram_id=telegram_id,
+                    payload=payload,
+                ).returning(Message)
+            )
 
-        await self.db.commit()
-        return result.scalar_one()
+            await session.commit()
+            return result.scalar_one()
 
     async def get_last_messages(self, chat_id: int, limit: int = 10) -> list[Message]:
         """
@@ -58,11 +60,13 @@ class MessageRepository(BaseRepository):
         Returns:
             list[Message]: A list of the last messages from the chat.
         """
-        result = await self.db.execute(
-            select(Message)
-            .where(Message.chat_id == chat_id)
-            .order_by(Message.created_at.desc())
-            .limit(limit)
-        )
+        async with self.async_session() as session:
+            result = await session.execute(
+                select(Message)
+                .where(Message.chat_id == chat_id)
+                .order_by(Message.created_at.desc())
+                .options(selectinload(Message.from_user))
+                .limit(limit)
+            )
 
-        return result.scalars().all()
+            return result.scalars().all()

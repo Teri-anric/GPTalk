@@ -21,8 +21,8 @@ def get_async_engine(url: str = settings.database.url) -> AsyncEngine:
     return create_async_engine(url)
 
 
-@cache
-def get_async_session_maker(engine: AsyncEngine | None = None) -> async_sessionmaker:
+
+def get_async_session(engine: AsyncEngine | None = None) -> async_sessionmaker:
     """
     Get an async session for the database.
     """
@@ -34,11 +34,3 @@ def get_async_session_maker(engine: AsyncEngine | None = None) -> async_sessionm
     )
 
     return async_session
-
-
-def get_async_session() -> AsyncSession:
-    """
-    Get an async session for the database.
-    """
-    async_session = get_async_session_maker()
-    return async_session()

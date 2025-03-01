@@ -1,18 +1,16 @@
 import time
 import asyncio
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from .logger import logger
 
 from aiogram import Bot
 
-from app.db import DBReposContext
 from app.ai_provider import AIProvider
 from app.worker.ai_processor import AIProcessor
+from app.db import DBReposContext
 
-
-DEFAULT_MAX_DELAY = 60 * 60 * 1  # 1 hour
-DEFAULT_MIN_DELAY = 1  # 10 seconds
+MINIMAL_SLEEP = 1  # 1 seconds
 
 
 @dataclass
@@ -20,11 +18,22 @@ class ChatProcessInfo:
     chat_id: int
     last_processed: float = field(default_factory=time.time)
     last_updated: float = field(default_factory=time.time)
+    max_delay: float | None = None
+    min_delay: float | None = None
 
     def is_ready_to_process(self) -> bool:
-        is_ready = (time.time() - self.last_processed) > DEFAULT_MAX_DELAY
+        is_ready = False    
+        time_diff = time.time() - self.last_processed
+        # Check max delay
+        if self.max_delay is not None:
+            is_ready = time_diff > self.max_delay
+        # Check last updated
         if self.last_updated >= self.last_processed:
             is_ready = True
+        # Check min delay
+        if self.min_delay is not None:
+            is_ready = time_diff < self.min_delay
+        # Update last processed
         if is_ready:
             self.last_processed = time.time()
         return is_ready
@@ -38,22 +47,20 @@ class BackgroundChatsProcessor:
     Background task for processing chats.
     """
 
-    def __init__(
-        self, db: DBReposContext, bot: Bot, **workflow_data
-    ):
-        self.db = db
+    def __init__(self, bot: Bot, **workflow_data):
         self.bot = bot
         self.ai_provider = AIProvider()
         self.workflow_data = workflow_data
-
-        self.ai_processor = AIProcessor(
-            self.db, self.bot, self.ai_provider, **self.workflow_data
-        )
 
         self.chats: dict[int, ChatProcessInfo] = {}
 
     async def _process_chats(self):
         tasks = []
+        ai_processor = AIProcessor(
+            self.bot,
+            self.ai_provider,
+            **self.workflow_data,
+        )
         while True:
             last_processed = time.time()
             logger.debug(f"Start processing {len(self.chats)} chats")
@@ -62,39 +69,38 @@ class BackgroundChatsProcessor:
                 if not chat_info.is_ready_to_process():
                     logger.debug(f"Chat {chat_id} is not ready to process")
                     continue
-                logger.info(f"Adding chat to process: {chat_id}") 
-                tasks.append(asyncio.create_task(self.ai_processor.process_chat(chat_id)))
-            
+                logger.info(f"Adding chat to process: {chat_id}")
+                tasks.append(
+                    asyncio.create_task(ai_processor.process_chat(chat_id))
+                )
+
             if not tasks:
-                logger.info("No chats to process")
-                await asyncio.sleep(DEFAULT_MIN_DELAY)
+                logger.debug("No chats to process")
+                await asyncio.sleep(MINIMAL_SLEEP)
                 continue
 
             logger.info(f"Processing {len(tasks)} chats")
             await asyncio.gather(*tasks)
             tasks.clear()
             # Sleep if many time left
-            left_time = DEFAULT_MIN_DELAY - (time.time() - last_processed)
+            left_time = MINIMAL_SLEEP - (time.time() - last_processed)
             logger.info(f"End processing, left time: {left_time}")
             if left_time > 0:
                 await asyncio.sleep(left_time)
 
     async def run(self):
         logger.info("Starting worker")
-        update_task = asyncio.create_task(self._update_chats())
-        process_task = asyncio.create_task(self._process_chats())
-
         await asyncio.gather(
-            update_task,
-            process_task,
+            self._update_chats(),
+            self._process_chats(),
         )
 
     async def _update_chats(self):
-        last_processed = datetime.now() - timedelta(seconds=DEFAULT_MIN_DELAY)
+        last_processed = datetime.fromtimestamp(0.0)
+        db = DBReposContext()
         while True:
             # Get updated chats
-            logger.info("Updating chats")
-            chat_ids = await self.db.chat.get_updated_chats(last_processed)
+            chat_ids = await db.chat.get_updated_chats(last_processed)
             for chat_id in chat_ids:
                 chat_info = self.chats.get(chat_id)
                 if chat_info is None:
@@ -103,6 +109,6 @@ class BackgroundChatsProcessor:
                     logger.info(f"Created chat info for chat: {chat_id}")
                 chat_info.set_last_updated(time.time())
                 logger.info(f"Updated chat info for chat: {chat_id}")
-            logger.info(f"Updated {len(chat_ids)} chats")
             last_processed = datetime.now()
-            await asyncio.sleep(DEFAULT_MIN_DELAY)
+            await asyncio.sleep(MINIMAL_SLEEP)
+

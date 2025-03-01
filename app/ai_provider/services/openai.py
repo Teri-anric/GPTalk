@@ -1,4 +1,6 @@
 import json
+from json.decoder import JSONDecodeError
+import logging
 
 from openai import OpenAI
 from openai.lib import pydantic_function_tool
@@ -8,6 +10,8 @@ from app.config import settings
 
 from ..tools.base import BaseTool
 from .base import AiResponse, BaseAIService
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIService(BaseAIService):
@@ -33,15 +37,19 @@ class OpenAIService(BaseAIService):
             tool_cls = tools_map.get(tool.function.name)
             if tool_cls is None:
                 continue
-            tools.append(
-                tool_cls(
-                    **json.loads(tool.function.arguments),
-                    _extra_payload=tool.model_dump(),
+            try:
+                tools.append(
+                    tool_cls(
+                        **json.loads(tool.function.arguments),
+                        _extra_payload=tool.model_dump(),
+                    )
                 )
-            )
+            except JSONDecodeError as e:
+                logger.error(f"Error creating tool {tool.function.name} with arguments {tool.function.arguments}: {e}")
+                continue
 
         return tools
-
+    
     async def generate_response(
         self, messages: list[dict], tools: list[BaseTool]
     ) -> AiResponse:

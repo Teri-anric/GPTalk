@@ -17,7 +17,7 @@ class BaseTool(BaseModel):
 
     async def run(self, context: dict):
         kwargs = self._prepare_kwargs(context)
-        await self(**kwargs)
+        return await self(**kwargs)
 
     def _prepare_kwargs(self, kwargs: dict) -> dict:
         spec = inspect.getfullargspec(self.__call__)

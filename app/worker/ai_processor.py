@@ -3,23 +3,23 @@ import logging
 from aiogram import Bot
 
 from app.db import DBReposContext
-from app.db import Message, MessageType
+from app.db import MessageType
 from app.db import ChatAISettings
 
 from app.ai_provider import AIProvider
-from app.ai_provider.tools import BaseTool, AnswerTool
+from app.ai_provider.tools import BaseTool, TOOLS
 from app.ai_provider.services.base import AiResponse
-
-from app.constants import BASE_PROMPT, TEXT_MESSAGE_IN_CHAT, NOT_RESPONSE_TOOL_MESSAGE
+from .conversation import ConversationBuilder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class AIProcessor:
-    def __init__(self, db: DBReposContext, bot: Bot, ai_provider: AIProvider, **workflow_data):
-        self.db = db
+    def __init__(self, bot: Bot, ai_provider: AIProvider, **workflow_data):
+        self.db = DBReposContext()
         self.bot = bot
         self.ai_provider = ai_provider
+        self.conversation_builder = ConversationBuilder(self.assistant_user_id)
         self.workflow_data = workflow_data
     
     async def _get_chat_settings(self, chat_id: int) -> ChatAISettings:
@@ -31,65 +31,6 @@ class AIProcessor:
     @property
     def assistant_user_id(self) -> int:
         return self.bot.id
-
-    def _prepare_tool_call_message(self, message: Message) -> list[dict]:
-        tool_calls = message.payload["tool_calls"]
-        tool_calls_results = message.payload["tool_calls_results"]
-
-        conversation = [
-            {
-                "role": "assistant",
-                "tool_calls": tool_calls,
-            }
-        ]
-        for tool_call in tool_calls:
-            tool_call_result = tool_calls_results[tool_call["id"]] or NOT_RESPONSE_TOOL_MESSAGE
-            conversation.append(
-                {
-                    "role": "tool",
-                    "content": tool_call_result,
-                    "tool_call_id": tool_call["id"],
-                }
-            )
-        return conversation
-
-
-    def _prepare_message_text(self, message: Message) -> list[dict]:
-        if not message.content:
-            return []
-        role = "user"
-        if message.from_user_id == self.assistant_user_id:
-            role = "assistant"
-        return [
-            {
-                "role": role,
-                "content": TEXT_MESSAGE_IN_CHAT.format(
-                    message_id=message.telegram_id,
-                    from_user_id=message.from_user_id,
-                    user_message=message.content,
-                ),
-            }
-        ]
-
-    def _prepare_messages(
-        self,
-        prompt: str,
-        messages: list[Message]
-    ) -> list[dict]:
-        conversation = [
-            {
-                "role": "system",
-                "content": BASE_PROMPT.format(
-                    user_instructions=prompt,
-                ),
-            }
-        ]
-        for message in messages:    
-            if message.type == MessageType.TOOL_CALLS:
-                conversation.extend(self._prepare_tool_call_message(message))
-            if message.type in (MessageType.AI_REFLECTION, MessageType.TEXT):
-                conversation.extend(self._prepare_message_text(message))
-        return conversation
 
 
     async def _process_tool_call(
@@ -111,6 +52,7 @@ class AIProcessor:
                         "bot": self.bot,
                         "chat_id": chat_id,
                         "db": self.db,
+                        "assistant_id": self.assistant_user_id,
                         **self.workflow_data,
                     }
                 )
@@ -148,14 +90,14 @@ class AIProcessor:
             limit=chat_settings.messages_limit,
         )
         # Prepare messages for ai
-        conversation = self._prepare_messages(
+        conversation = self.conversation_builder.build(
             prompt=chat_settings.prompt,
             messages=reversed(messages),
         )
         logger.debug(f"Conversation by {chat_id}: {conversation}")
         # Generate response from ai
         response = await ai_service.generate_response(
-            messages=conversation, tools=[AnswerTool]
+            messages=conversation, tools=TOOLS
         )
         logger.debug(f"Response generated for chat_id: {chat_id}")
         return response
@@ -186,6 +128,7 @@ class AIProcessor:
         chat_id: int,
     ):
         chat_settings = await self._get_chat_settings(chat_id)
+        await self.bot.send_chat_action(chat_id=chat_id, action="typing")
         response = await self._generate_response(
             chat_id=chat_id,
             chat_settings=chat_settings,
