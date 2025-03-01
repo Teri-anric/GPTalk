@@ -1,8 +1,8 @@
 """
 
-Revision ID: 02867f497e97
+Revision ID: cfef929c7028
 Revises: 
-Create Date: 2025-03-01 00:20:43.491693
+Create Date: 2025-03-01 19:21:30.626081
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "02867f497e97"
+revision: str = "cfef929c7028"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -67,7 +67,9 @@ def upgrade() -> None:
         sa.Column("chat_id", sa.BigInteger(), nullable=False),
         sa.Column("provider", sa.String(), nullable=False),
         sa.Column("prompt", sa.String(), nullable=False),
-        sa.Column("messages_limit", sa.Integer(), nullable=False),
+        sa.Column("messages_context_limit", sa.Integer(), nullable=False),
+        sa.Column("max_not_response_time", sa.Integer(), nullable=True),
+        sa.Column("min_delay_between_messages", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["chat_id"],
             ["chats.id"],

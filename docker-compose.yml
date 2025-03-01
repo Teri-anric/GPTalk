@@ -7,8 +7,7 @@ services:
     restart: unless-stoppeds
     command: ["python", "-m", "app.bot"]
     depends_on:
-      - db:
-          condition: service_healthy
+      - db
     env_file:
       - .env
     volumes:
@@ -24,8 +23,7 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "app.worker"]
     depends_on:
-      - db:
-          condition: service_healthy
+      - db
     env_file:
       - .env
     volumes:

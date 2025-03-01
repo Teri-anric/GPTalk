@@ -87,7 +87,7 @@ class AIProcessor:
         # Get last messages from db
         messages = await self.db.message.get_last_messages(
             chat_id=chat_id,
-            limit=chat_settings.messages_limit,
+            limit=chat_settings.messages_context_limit,
         )
         # Prepare messages for ai
         conversation = self.conversation_builder.build(
