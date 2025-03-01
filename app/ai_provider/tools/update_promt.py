@@ -11,5 +11,5 @@ class UpdatePromt(BaseTool):
     new_instructions: str
 
     async def __call__(self, db: DBReposContext, chat_id: int):
-        await db.chat.update_prompt(chat_id, self.new_instructions)
-        return "user instructions updated"
+        await db.chat.update_ai_settings(chat_id, prompt=self.new_instructions)
+        return "User instructions updated"
