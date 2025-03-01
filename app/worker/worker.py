@@ -20,13 +20,13 @@ class ChatProcessInfo:
     last_updated: float = field(default_factory=time.time)
     max_not_response_time: float | None = None
     min_delay_between_messages: float | None = None
-    
+
     def update_settings(self, chat_setting: ChatAISettings):
         self.max_not_response_time = chat_setting.max_not_response_time
         self.min_delay_between_messages = chat_setting.min_delay_between_messages
-    
+
     def is_ready_to_process(self) -> bool:
-        is_ready = False    
+        is_ready = False
         time_diff = time.time() - self.last_processed
         # Check max delay
         if self.max_not_response_time is not None:
@@ -74,9 +74,7 @@ class BackgroundChatsProcessor:
                     logger.debug(f"Chat {chat_id} is not ready to process")
                     continue
                 logger.info(f"Adding chat to process: {chat_id}")
-                tasks.append(
-                    asyncio.create_task(ai_processor.process_chat(chat_id))
-                )
+                tasks.append(asyncio.create_task(ai_processor.process_chat(chat_id)))
 
             if not tasks:
                 logger.debug("No chats to process")
@@ -119,11 +117,12 @@ class BackgroundChatsProcessor:
                 chat_info.set_last_updated(last_processed.timestamp())
                 logger.info(f"Updated chat info for chat: {chat_setting.chat_id}")
             # Update last processed
-            chat_ids = await db.chat.get_awaible_new_messages_in_chats(last_processed)
+            chat_ids = await db.chat.get_awaible_new_messages_in_chats(
+                last_processed, except_from_user_id=self.bot.id
+            )
             for chat_id in chat_ids:
                 chat_info = self._set_default_chat_info(chat_id)
                 chat_info.set_last_updated(last_processed.timestamp())
                 logger.info(f"Updated chat info for chat: {chat_id}")
             last_processed = datetime.now()
             await asyncio.sleep(MINIMAL_SLEEP)
-

@@ -117,14 +117,15 @@ class ChatRepository(BaseRepository):
             )
             return chats_updated.scalars().all()
 
-    async def get_awaible_new_messages_in_chats(self, last_processed: datetime) -> list[int]:
+    async def get_awaible_new_messages_in_chats(self, last_processed: datetime, except_from_user_id: int | None = None) -> list[int]:
         """
         Get chats that have new messages after the given timestamp.
         """
         async with self.async_session() as session:
             chats_updated = await session.execute(
                 select(Message.chat_id).where(
-                    Message.created_at > last_processed
+                    Message.created_at > last_processed,
+                    Message.from_user_id != except_from_user_id
                 ).group_by(Message.chat_id)
             )
             return chats_updated.scalars().all()
