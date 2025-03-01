@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: gptalk-app
-    restart: unless-stoppeds
+    restart: always
     command: ["python", "-m", "app.bot"]
     depends_on:
       - db
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: gptalk-worker
-    restart: unless-stopped
+    restart: always
     command: ["python", "-m", "app.worker"]
     depends_on:
       - db
