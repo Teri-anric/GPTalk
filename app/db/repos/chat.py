@@ -101,23 +101,30 @@ class ChatRepository(BaseRepository):
                 )
                 await session.commit()
 
-
-    async def get_updated_chats(self, last_processed: datetime) -> list[int]:
+    
+    async def get_updated_chats_settings(self, last_processed: datetime) -> list[ChatAISettings]:
         """
         Get chats that have been updated after the given timestamp.
         """
         async with self.async_session() as session:
             chats_updated = await session.execute(
-                select(Chat.id).where(
+                select(ChatAISettings).where(
                     or_(
-                        Chat.updated_at > last_processed,
-                        Chat.created_at > last_processed,
-                        exists()
-                        .select_from(Message)
-                        .where(
-                            Message.chat_id == Chat.id, Message.created_at > last_processed
-                        ),
+                        ChatAISettings.updated_at > last_processed,
+                        ChatAISettings.created_at > last_processed,
                     )
+                )
+            )
+            return chats_updated.scalars().all()
+
+    async def get_awaible_new_messages_in_chats(self, last_processed: datetime) -> list[int]:
+        """
+        Get chats that have new messages after the given timestamp.
+        """
+        async with self.async_session() as session:
+            chats_updated = await session.execute(
+                select(Message.chat_id).where(
+                    Message.created_at > last_processed
                 )
             )
             return chats_updated.scalars().all()

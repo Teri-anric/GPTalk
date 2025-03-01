@@ -1,6 +1,6 @@
 from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String
 
-from .base import Base
+from .base import Base, TimestampMixin
 
 DEFAULT_PROVIDER = "openai:gpt-4o-mini"
 DEFAULT_PROMPT = "You are a helpful assistant."
@@ -9,7 +9,7 @@ DEFAULT_MAX_NOT_RESPONSE_TIME = None
 DEFAULT_MIN_DELAY_BETWEEN_MESSAGES = 10
 
 
-class ChatAISettings(Base):
+class ChatAISettings(Base, TimestampMixin):
     """
     Chat AI settings model.
     """

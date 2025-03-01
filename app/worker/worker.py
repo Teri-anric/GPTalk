@@ -1,6 +1,6 @@
 import time
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass, field
 from .logger import logger
 
@@ -8,7 +8,7 @@ from aiogram import Bot
 
 from app.ai_provider import AIProvider
 from app.worker.ai_processor import AIProcessor
-from app.db import DBReposContext
+from app.db import DBReposContext, ChatAISettings
 
 MINIMAL_SLEEP = 1  # 1 seconds
 
@@ -20,7 +20,11 @@ class ChatProcessInfo:
     last_updated: float = field(default_factory=time.time)
     max_not_response_time: float | None = None
     min_delay_between_messages: float | None = None
-
+    
+    def update_settings(self, chat_setting: ChatAISettings):
+        self.max_not_response_time = chat_setting.max_not_response_time
+        self.min_delay_between_messages = chat_setting.min_delay_between_messages
+    
     def is_ready_to_process(self) -> bool:
         is_ready = False    
         time_diff = time.time() - self.last_processed
@@ -95,19 +99,30 @@ class BackgroundChatsProcessor:
             self._process_chats(),
         )
 
+    def _set_default_chat_info(self, chat_id: int) -> ChatProcessInfo:
+        chat_info = self.chats.get(chat_id)
+        if chat_info is None:
+            chat_info = ChatProcessInfo(chat_id=chat_id)
+            self.chats[chat_id] = chat_info
+            logger.info(f"Created chat info for chat: {chat_id}")
+        return chat_info
+
     async def _update_chats(self):
         last_processed = datetime.fromtimestamp(0.0)
         db = DBReposContext()
         while True:
-            # Get updated chats
-            chat_ids = await db.chat.get_updated_chats(last_processed)
+            # Get updated chats settings
+            chats_settings = await db.chat.get_updated_chats_settings(last_processed)
+            for chat_setting in chats_settings:
+                chat_info = self._set_default_chat_info(chat_setting.chat_id)
+                chat_info.update_settings(chat_setting)
+                chat_info.set_last_updated(last_processed)
+                logger.info(f"Updated chat info for chat: {chat_setting.chat_id}")
+            # Update last processed
+            chat_ids = await db.chat.get_awaible_new_messages_in_chats(last_processed)
             for chat_id in chat_ids:
-                chat_info = self.chats.get(chat_id)
-                if chat_info is None:
-                    chat_info = ChatProcessInfo(chat_id=chat_id)
-                    self.chats[chat_id] = chat_info
-                    logger.info(f"Created chat info for chat: {chat_id}")
-                chat_info.set_last_updated(time.time())
+                chat_info = self._set_default_chat_info(chat_id)
+                chat_info.set_last_updated(last_processed)
                 logger.info(f"Updated chat info for chat: {chat_id}")
             last_processed = datetime.now()
             await asyncio.sleep(MINIMAL_SLEEP)
