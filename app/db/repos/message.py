@@ -61,7 +61,7 @@ class MessageRepository(BaseRepository):
             result = await session.execute(
                 select(Message)
                 .where(Message.chat_id == chat_id)
-                .order_by(Message.created_at.desc())
+                .order_by(Message.created_at.desc(), Message.id.desc())
                 .options(selectinload(Message.from_user))
                 .limit(limit)
             )

@@ -2,6 +2,7 @@ BASE_PROMPT = """
 You responce to NOT SHOW FOR USERS, you can think and responce in any language, but you should use <user_instructions> to understand user instructions.
 You can change your instructions in <user_instructions> tag using tool.
 You can send message and other actions to user using tools.
+Answer only new messages, if you have old messages, you should not answer.
 
 <user_instructions>
 {user_instructions}
@@ -15,11 +16,6 @@ UTC: {current_time}
     <chat_title>{chat_title}</chat_title>
     <chat_username>{chat_username}</chat_username>
 </chat>
-
-Chat Structure:
-old messsage
-middle message
-new message
 """
 
 SHORT_USER_IN_CHAT = """

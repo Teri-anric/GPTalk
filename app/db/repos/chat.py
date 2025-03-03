@@ -9,13 +9,18 @@ from .base import BaseRepository
 
 UNSET = object()
 
+
 class ChatRepository(BaseRepository):
     """
     Repository for handling chat-related database operations.
     """
 
     async def create_or_update_chat(
-        self, chat_id: int, title: str = None, username: str = None, type: ChatType = None
+        self,
+        chat_id: int,
+        title: str = None,
+        username: str = None,
+        type: ChatType = None,
     ) -> Chat:
         """
         Create a new chat or update existing chat's information using on_conflict_do_update.
@@ -31,7 +36,8 @@ class ChatRepository(BaseRepository):
                 pg_insert(Chat)
                 .values(id=chat_id, title=title, username=username, type=type)
                 .on_conflict_do_update(
-                    index_elements=["id"], set_={"title": title, "username": username, "type": type}
+                    index_elements=["id"],
+                    set_={"title": title, "username": username, "type": type},
                 )
             )
             await session.commit()
@@ -57,7 +63,6 @@ class ChatRepository(BaseRepository):
                 await session.commit()
             return chat
 
-
     async def update_ai_settings(
         self,
         chat_id: int,
@@ -82,28 +87,30 @@ class ChatRepository(BaseRepository):
                 data["max_not_response_time"] = max_not_response_time
             if min_delay_between_messages is not UNSET:
                 data["min_delay_between_messages"] = min_delay_between_messages
-            
+
             result = await session.execute(
                 update(ChatAISettings)
                 .where(ChatAISettings.chat_id == chat_id)
-                .values(
-                    **data
-                ).returning(ChatAISettings)
+                .values(**data)
             )
             await session.commit()
 
             if result.rowcount == 0:
                 result = await session.execute(
-                    insert(ChatAISettings).values(
-                        chat_id=chat_id,
-                        **data
-                    ).returning(ChatAISettings)
+                    insert(ChatAISettings)
+                    .values(chat_id=chat_id, **data)
+                    .returning(ChatAISettings)
                 )
                 await session.commit()
+                return result.scalar_one()
+            result = await session.execute(
+                select(ChatAISettings).filter(ChatAISettings.chat_id == chat_id)
+            )
             return result.scalar_one()
 
-    
-    async def get_updated_chats_settings(self, last_processed: datetime) -> list[ChatAISettings]:
+    async def get_updated_chats_settings(
+        self, last_processed: datetime
+    ) -> list[ChatAISettings]:
         """
         Get chats that have been updated after the given timestamp.
         """
@@ -118,15 +125,19 @@ class ChatRepository(BaseRepository):
             )
             return chats_updated.scalars().all()
 
-    async def get_awaible_new_messages_in_chats(self, last_processed: datetime, except_types: list[MessageType] | None = None) -> list[int]:
+    async def get_awaible_new_messages_in_chats(
+        self, last_processed: datetime, except_types: list[MessageType] | None = None
+    ) -> list[int]:
         """
         Get chats that have new messages after the given timestamp.
         """
         async with self.async_session() as session:
             chats_updated = await session.execute(
-                select(Message.chat_id).where(
+                select(Message.chat_id)
+                .where(
                     Message.created_at > last_processed,
                     not_(Message.type.in_(except_types)) if except_types else True,
-                ).group_by(Message.chat_id)
+                )
+                .group_by(Message.chat_id)
             )
             return chats_updated.scalars().all()

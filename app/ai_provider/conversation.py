@@ -26,7 +26,7 @@ class ConversationBuilder:
                 "role": "system",
                 "content": BASE_PROMPT.format(
                     user_instructions=chat.ai_settings.prompt,
-                    current_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    current_time=datetime.now().isoformat(),
                     chat_id=chat.id,
                     chat_type=chat.type,
                     chat_title=chat.title,
@@ -152,7 +152,7 @@ class ConversationBuilder:
                     user_message=message.content,
                     content_type=(message.payload or {}).get("is_forwarded", False) and "forwarded-text" or "text",
                     reply_to_message=self._get_reply_to_message(message, messages),
-                    date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    date=message.created_at.isoformat(),
                 ),
             }
         ]
@@ -165,7 +165,7 @@ class ConversationBuilder:
                 "role": "user",
                 "content": NOTIFICATION_MESSAGE_IN_CHAT.format(
                     notification_message=message.content,
-                    date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    date=message.created_at.isoformat(),
                 ),
             }
         ]
