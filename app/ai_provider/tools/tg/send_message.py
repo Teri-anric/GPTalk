@@ -26,13 +26,14 @@ class SendMessage(BaseTool):
     HTML style use tags: <b>,<strong>, <i>, <em>, <u>, <ins>, <s>, <strike>, <del>, <span class="tg-spoiler">,
         <tg-spoiler>, <a href="http://www.example.com/">, <a href="tg://user?id=123456789">, <tg-emoji emoji-id="5368324170671202286">,
         <code>, <pre>, <pre><code class="language-python">, <blockquote>, <blockquote expandable>
-    Do not use reply_to_message_id and reply_quote, keyboard unless absolutely necessary.
+    Do not use reply_to_message_id and reply_quote, keyboard, inline_keyboard unless absolutely necessary.
     """
 
     text: str
     reply_to_message_id: int | None = None
     reply_quote: str | None = None
-    keyboard: list[list[Button]] | list[list[str]] | Literal["REMOVE"] = None
+    keyboard: list[list[str]] | Literal["REMOVE"] = None
+    inline_keyboard: list[list[Button]] | None = None
 
     async def __call__(self, bot: Bot, chat_id: int):
         message = await bot(
