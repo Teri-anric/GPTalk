@@ -32,7 +32,7 @@ class SendMessage(BaseTool):
     text: str
     reply_to_message_id: int | None = None
     reply_quote: str | None = None
-    keyboard: list[list[str]] | None = None
+    keyboard: list[list[str]] | Literal["REMOVE"] | None = None
     inline_keyboard: list[list[Button]] | None = None
 
     async def __call__(self, bot: Bot, chat_id: int):
@@ -55,6 +55,8 @@ class SendMessage(BaseTool):
     def _get_keyboard(self) -> InlineKeyboardMarkup | ReplyKeyboardMarkup | None:
         if not self.keyboard or not self.keyboard[0]:
             return None
+        if self.keyboard == "REMOVE":
+            return ReplyKeyboardRemove()
         if self.inline_keyboard:
             return InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -67,8 +69,7 @@ class SendMessage(BaseTool):
             )
         return ReplyKeyboardMarkup(
             keyboard=[
-                [KeyboardButton(text=button) for button in row]
-                for row in self.keyboard
+                [KeyboardButton(text=button) for button in row] for row in self.keyboard
             ],
             resize_keyboard=True,
             one_time_keyboard=True,
