@@ -16,7 +16,6 @@ class MessageRepository(BaseRepository):
         content: str = None,
         telegram_id: int | None = None,
         payload: dict | None = None,
-        reply_to_id: int | None = None,
     ) -> Message:
         """
         Create a new message.
@@ -28,7 +27,6 @@ class MessageRepository(BaseRepository):
             content (str): The content of the message.
             telegram_id (int): The ID of the message in Telegram.
             payload (dict): Additional data associated with the message.
-            reply_to_id (int): The ID of the message being replied to.
 
         Returns:
             Message: The newly created message.
@@ -40,7 +38,6 @@ class MessageRepository(BaseRepository):
                     from_user_id=from_user_id,
                     type=type,
                     content=content or "",
-                    reply_to_id=reply_to_id,
                     telegram_id=telegram_id,
                     payload=payload,
                 ).returning(Message)

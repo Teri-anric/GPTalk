@@ -1,4 +1,3 @@
-from app.worker.ai_processor import AIProcessor
-from app.worker.worker import BackgroundChatsProcessor
+from .chat_processor import BackgroundChatsProcessor
 
-__all__ = ["AIProcessor", "BackgroundChatsProcessor"]
+__all__ = ["BackgroundChatsProcessor"]

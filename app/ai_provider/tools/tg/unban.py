@@ -1,10 +1,11 @@
 from ..base import BaseTool
+from .mixins import OnlyGroupChatToolMixin
 
 from aiogram import Bot
 from aiogram.methods import UnbanChatMember
 
 
-class Unban(BaseTool):
+class Unban(OnlyGroupChatToolMixin, BaseTool):
     user_id: int
 
     async def __call__(self, bot: Bot, chat_id: int):

@@ -3,7 +3,7 @@ Database module.
 """
 
 from .conn import get_async_engine, get_async_session
-from .models import Base, User, Message, Chat, ChatAISettings, MessageType
+from .models import Base, User, Message, Chat, ChatAISettings, MessageType, ChatType, Scheduled
 from .repos import BaseRepository, UserRepository, MessageRepository, ChatRepository
 from .context import DBReposContext
 
@@ -21,4 +21,5 @@ __all__ = [
     "MessageRepository",
     "ChatRepository",
     "MessageType",
+    "ChatType",
 ]

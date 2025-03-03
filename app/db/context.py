@@ -4,7 +4,7 @@ Middleware for managing context in Telegram bot interactions.
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from .repos import ChatRepository, MessageRepository, UserRepository
+from .repos import ChatRepository, MessageRepository, UserRepository, ScheduledRepo
 from .conn import get_async_session
 
 
@@ -18,3 +18,4 @@ class DBReposContext:
         self.user = UserRepository(self.async_session)
         self.chat = ChatRepository(self.async_session)
         self.message = MessageRepository(self.async_session)
+        self.scheduled = ScheduledRepo(self.async_session)

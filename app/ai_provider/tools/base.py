@@ -32,3 +32,7 @@ class BaseTool(BaseModel):
     def __init__(self, /, **data: Any) -> None:
         super().__init__(**data)
         self._extra_payload = data.pop("_extra_payload", {})
+
+    @classmethod
+    def filter(cls, context: dict) -> bool:
+        return True

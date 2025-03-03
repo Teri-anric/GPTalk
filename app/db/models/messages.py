@@ -25,6 +25,7 @@ class MessageType(PyEnum):
     TEXT = "text"
     TOOL_CALLS = "tool_calls"
     AI_REFLECTION = "ai_reflection"
+    NOTIFICATION = "notification"
     # TRIGGER = "trigger"
     # IMAGE = "image"
     # AUDIO = "audio"
@@ -44,7 +45,6 @@ class Message(Base, TimestampMixin):
     content: str = Column(String, default="", nullable=False)
     payload: dict = Column(JSON, nullable=True, default=None)
 
-    reply_to_id: int = Column(BigInteger, nullable=True)
     from_user_id: int = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     chat_id: int = Column(BigInteger, ForeignKey("chats.id"), nullable=False)
 
@@ -52,4 +52,3 @@ class Message(Base, TimestampMixin):
 
     from_user: "User | None" = relationship("User")
     chat: "Chat" = relationship("Chat")
-    # reply_to: "Message" = relationship("Message", primaryjoin="Message.reply_to_id == Message.id")

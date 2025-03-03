@@ -1,10 +1,11 @@
 from ..base import BaseTool
+from .mixins import OnlyGroupChatToolMixin
 
 from aiogram import Bot
 from aiogram.methods import BanChatMember
 from datetime import timedelta
 
-class Ban(BaseTool):
+class Ban(OnlyGroupChatToolMixin, BaseTool):
     """
     until_time - ban time in seconds (more than 366 days or less than 30 seconds or not provided - banned forever)
     """

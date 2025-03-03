@@ -1,49 +1,21 @@
+import logging
 import time
 import asyncio
 from datetime import datetime
-from dataclasses import dataclass, field
-from .logger import logger
 
 from aiogram import Bot
 
 from app.ai_provider import AIProvider
-from app.worker.ai_processor import AIProcessor
-from app.db import DBReposContext, ChatAISettings
+from app.db import DBReposContext, MessageType
+
+from .ai_processor import AIProcessor
+from .types import ChatProcessInfo
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 MINIMAL_SLEEP = 1  # 1 seconds
-
-
-@dataclass
-class ChatProcessInfo:
-    chat_id: int
-    last_processed: float = field(default_factory=time.time)
-    last_updated: float = field(default_factory=time.time)
-    max_not_response_time: float | None = None
-    min_delay_between_messages: float | None = None
-
-    def update_settings(self, chat_setting: ChatAISettings):
-        self.max_not_response_time = chat_setting.max_not_response_time
-        self.min_delay_between_messages = chat_setting.min_delay_between_messages
-
-    def is_ready_to_process(self) -> bool:
-        is_ready = False
-        time_diff = time.time() - self.last_processed
-        # Check max delay
-        if self.max_not_response_time is not None:
-            is_ready = time_diff > self.max_not_response_time
-        # Check last updated
-        if self.last_updated >= self.last_processed:
-            is_ready = True
-        # Check min delay
-        if is_ready and self.min_delay_between_messages is not None:
-            is_ready = time_diff > self.min_delay_between_messages
-        # Update last processed
-        if is_ready:
-            self.last_processed = time.time()
-        return is_ready
-
-    def set_last_updated(self, last_updated: float):
-        self.last_updated = last_updated
 
 
 class BackgroundChatsProcessor:
@@ -118,7 +90,8 @@ class BackgroundChatsProcessor:
                 logger.info(f"Updated chat info for chat: {chat_setting.chat_id}")
             # Update last processed
             chat_ids = await db.chat.get_awaible_new_messages_in_chats(
-                last_processed, except_from_user_id=self.bot.id
+                last_processed,
+                except_types=[MessageType.TOOL_CALLS],  # MessageType.AI_REFLECTION
             )
             for chat_id in chat_ids:
                 chat_info = self._set_default_chat_info(chat_id)

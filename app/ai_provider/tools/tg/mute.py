@@ -4,8 +4,9 @@ from aiogram import Bot
 from aiogram.methods import RestrictChatMember
 from aiogram.types import ChatPermissions
 from datetime import timedelta
+from .mixins import OnlyGroupChatToolMixin
 
-class Mute(BaseTool):
+class Mute(OnlyGroupChatToolMixin, BaseTool):
     """
     until_time - mute time in seconds (more than 366 days or less than 30 seconds or not provided - muted forever)
     """
