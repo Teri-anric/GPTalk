@@ -62,12 +62,12 @@ EXTERNAL_REPLY_IN_CHAT = """
 REPLY_TO_MESSAGE_IN_CHAT = """
 <reply_to id="{reply_to_id}">
     {reply_to_user}
-    <{reply_type_content}>{reply_to_content}</{reply_type_content}>
+    {content}
 </reply_to>
 """
 
 TEXT_MESSAGE_IN_CHAT = """
-<message id="{message_id}" class_name="{class_name}">
+<{class_name}-message id="{message_id}">
     {from_user}
     {content}
     {reply_to_message}

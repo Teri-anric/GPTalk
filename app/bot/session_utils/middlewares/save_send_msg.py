@@ -37,9 +37,9 @@ class SaveSendMsg(BaseRequestMiddleware):
 
             chat_id=method.chat_id,
             from_user_id=bot.id,
-            reply_to_id=method.reply_to_message_id,
 
             type=MessageType.TEXT,
             content=method.text,
             payload=None,
         )
+        return response

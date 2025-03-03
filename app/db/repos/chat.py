@@ -118,7 +118,7 @@ class ChatRepository(BaseRepository):
             )
             return chats_updated.scalars().all()
 
-    async def get_awaible_new_messages_in_chats(self, last_processed: datetime, except_types: list[MessageType] | None = None) -> list[int]:
+    async def get_awaible_new_messages_in_chats(self, last_processed: datetime, except_types: list[MessageType] | None = None, ignore_user_ids: list[int] | None = None) -> list[int]:
         """
         Get chats that have new messages after the given timestamp.
         """
@@ -127,6 +127,7 @@ class ChatRepository(BaseRepository):
                 select(Message.chat_id).where(
                     Message.created_at > last_processed,
                     not_(Message.type.in_(except_types)) if except_types else True,
+                    not_(Message.from_user_id.in_(ignore_user_ids)) if ignore_user_ids else True,
                 ).group_by(Message.chat_id)
             )
             return chats_updated.scalars().all()

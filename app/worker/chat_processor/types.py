@@ -32,7 +32,7 @@ class ChatProcessInfo:
             is_ready = time_diff > self.min_delay_between_messages
         # Update last processed
         if is_ready:
-            self.last_seen_date = self.last_processed or datetime.now()
+            self.last_seen_date = datetime.fromtimestamp(self.last_processed)
             self.last_processed = time.time()
         return is_ready
 

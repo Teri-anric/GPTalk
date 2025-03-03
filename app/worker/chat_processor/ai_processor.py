@@ -107,7 +107,7 @@ class AIProcessor:
         # Prepare messages for ai
         conversation = self.conversation_builder.build(
             chat=chat,
-            messages=reversed(messages),
+            messages=messages,
             last_seen_date=last_seen_date,
         )
         logger.debug(f"Conversation by {chat.id}: {conversation}")

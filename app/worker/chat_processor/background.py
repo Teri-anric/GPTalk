@@ -92,6 +92,7 @@ class BackgroundChatsProcessor:
             chat_ids = await db.chat.get_awaible_new_messages_in_chats(
                 last_processed,
                 except_types=[MessageType.TOOL_CALLS],  # MessageType.AI_REFLECTION
+                ignore_user_ids=[self.bot.id],
             )
             for chat_id in chat_ids:
                 chat_info = self._set_default_chat_info(chat_id)
