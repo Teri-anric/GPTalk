@@ -46,7 +46,7 @@ class BackgroundChatsProcessor:
                     logger.debug(f"Chat {chat_id} is not ready to process")
                     continue
                 logger.info(f"Adding chat to process: {chat_id}")
-                tasks.append(asyncio.create_task(ai_processor.process_chat(chat_id)))
+                tasks.append(asyncio.create_task(ai_processor.process_chat(chat_id, chat_info.last_seen_date)))
 
             if not tasks:
                 logger.debug("No chats to process")

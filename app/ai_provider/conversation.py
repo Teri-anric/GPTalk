@@ -19,20 +19,20 @@ from app.db import Message, MessageType, User, Chat
 from datetime import datetime
 
 
-class OldConversationBuilder:
+class ConversationBuilder:
     def __init__(self, assistant_user_id: int):
         self.assistant_user_id = assistant_user_id
 
-    def build(self, chat: Chat, messages: list[Message]):
-        return self._prepare_messages(chat, messages)
+    def build(self, chat: Chat, messages: list[Message], last_seen_date: datetime):
+        return self._prepare_messages(chat, messages, last_seen_date)
 
-    def _prepare_messages(self, chat: Chat, messages: list[Message]) -> list[dict]:
+    def _prepare_messages(self, chat: Chat, messages: list[Message], last_seen_date: datetime) -> list[dict]:
         conversation = []
         for message in messages:
             if message.type == MessageType.TOOL_CALLS:
                 conversation.extend(self._prepare_tool_call_message(message))
             if message.type == MessageType.TEXT:
-                conversation.extend(self._prepare_message_text(message, messages))
+                conversation.extend(self._prepare_message_text(message, messages, last_seen_date))
             if message.type == MessageType.AI_REFLECTION:
                 conversation.extend(self._prepare_ai_reflection_message(message, messages))
             if message.type == MessageType.NOTIFICATION:
@@ -163,7 +163,7 @@ class OldConversationBuilder:
         return content
 
     def _prepare_message_text(
-        self, message: Message, messages: list[Message]
+        self, message: Message, messages: list[Message], last_seen_date: datetime
     ) -> list[str]:
         if not message.content:
             return []
@@ -183,6 +183,7 @@ class OldConversationBuilder:
                 ),
                 reply_to_message=self._get_reply_to_message(message, messages),
                 date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                class_name=message.created_at < last_seen_date and "new" or "old",
             )
         ]
 

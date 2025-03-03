@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from aiogram import Bot
 
@@ -45,10 +46,11 @@ class AIProcessor:
     async def process_chat(
         self,
         chat_id: int,
+        last_seen_date: datetime,
     ):
         chat = await self._get_chat(chat_id)
         await self.bot.send_chat_action(chat.id, action="typing")
-        response = await self._generate_response(chat=chat)
+        response = await self._generate_response(chat=chat, last_seen_date=last_seen_date)
         await self._process_ai_response(chat=chat, response=response)
 
 
@@ -89,6 +91,7 @@ class AIProcessor:
     async def _generate_response(
         self,
         chat: Chat,
+        last_seen_date: datetime,
     ):
         logger.debug(f"Generating response for chat_id: {chat.id}")
         # Get ai service
@@ -105,6 +108,7 @@ class AIProcessor:
         conversation = self.conversation_builder.build(
             chat=chat,
             messages=reversed(messages),
+            last_seen_date=last_seen_date,
         )
         logger.debug(f"Conversation by {chat.id}: {conversation}")
         # Generate response from ai

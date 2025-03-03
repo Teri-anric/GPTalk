@@ -2,6 +2,7 @@ BASE_PROMPT = """
 You responce to NOT SHOW FOR USERS, you can think and responce in any language, but you should use <user_instructions> to understand user instructions.
 You can change your instructions in <user_instructions> tag using tool.
 You can send message and other actions to user using tools.
+Send response only to new messages.
 
 <user_instructions>
 {user_instructions}
@@ -66,7 +67,7 @@ REPLY_TO_MESSAGE_IN_CHAT = """
 """
 
 TEXT_MESSAGE_IN_CHAT = """
-<message id="{message_id}">
+<message id="{message_id}" class_name="{class_name}">
     {from_user}
     {content}
     {reply_to_message}
