@@ -7,23 +7,40 @@ You can send message and other actions to user using tools.
 {user_instructions}
 </user_instructions>
 
-<current_time>
-UTC: {current_time}
-</current_time>
+<info>
+    <current_time>UTC: {current_time}</current_time>
+    <assistant_id>{assistant_id}</assistant_id>
+</info>
+
 <chat id="{chat_id}">
     <chat_type>{chat_type}</chat_type>
     <chat_title>{chat_title}</chat_title>
     <chat_username>{chat_username}</chat_username>
-</chat>
 
-Chat Structure:
-old messsage
-middle message
-new message
+    <chat_messages>
+    {chat_messages}
+    </chat_messages>
+</chat>
 """
 
 SHORT_USER_IN_CHAT = """
 <{tag} id="{user_id}" />
+"""
+
+TEXT_MESSAGE_CONTENT = """
+<text>{content}</text>
+"""
+
+QUOTE_MESSAGE_CONTENT = """
+<quote>{content}</quote>
+"""
+
+SHORT_TEXT_MESSAGE_CONTENT = """
+<short_text>{content}</short_text>
+"""
+
+FORWARDED_TEXT_MESSAGE_CONTENT = """
+<forwarded_text>{content}</forwarded_text>
 """
 
 USER_IN_CHAT = """
@@ -37,7 +54,7 @@ USER_IN_CHAT = """
 EXTERNAL_REPLY_IN_CHAT = """
 <external_reply id="{reply_to_id}">
     {reply_to_user}
-    <{reply_type_content}>{reply_to_content}</{reply_type_content}>
+    {content}
 </external_reply>
 """
 
@@ -51,7 +68,7 @@ REPLY_TO_MESSAGE_IN_CHAT = """
 TEXT_MESSAGE_IN_CHAT = """
 <message id="{message_id}">
     {from_user}
-    <{content_type}>{user_message}</{content_type}>
+    {content}
     {reply_to_message}
     <date>{date}</date>
 </message>
@@ -60,8 +77,22 @@ TEXT_MESSAGE_IN_CHAT = """
 NOTIFICATION_MESSAGE_IN_CHAT = """
 <NOTIFICATION>
     <date>{date}</date>
-    <text>{notification_message}</text>
+    <message>{notification_message}</message>
 </NOTIFICATION>
+"""
+
+TOOL_IN_CHAT = """
+<tool>
+    <name>{tool_name}</name>
+    <parameters>{tool_parameters}</parameters>
+    <result>{tool_result}</result>
+</tool>
+"""
+
+AI_REFLECTION_MESSAGE_IN_CHAT = """
+<ai_reflection>
+    {content}
+</ai_reflection>
 """
 
 NOT_RESPONSE_TOOL_MESSAGE = "**Tool call empty response**"

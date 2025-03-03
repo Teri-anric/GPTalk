@@ -37,7 +37,6 @@ class SendMessage(BaseTool):
             SendMessageMethod(
                 chat_id=chat_id,
                 text=self.text,
-                no_save=True,
                 parse_mode="HTML",
                 reply_parameters=ReplyParameters(
                     message_id=self.reply_to_message_id,

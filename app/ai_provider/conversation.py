@@ -8,12 +8,18 @@ from app.constants import (
     NOTIFICATION_MESSAGE_IN_CHAT,
     SHORT_USER_IN_CHAT,
     EXTERNAL_REPLY_IN_CHAT,
+    TOOL_IN_CHAT,
+    TEXT_MESSAGE_CONTENT,
+    SHORT_TEXT_MESSAGE_CONTENT,
+    QUOTE_MESSAGE_CONTENT,
+    FORWARDED_TEXT_MESSAGE_CONTENT,
+    AI_REFLECTION_MESSAGE_IN_CHAT,
 )
 from app.db import Message, MessageType, User, Chat
 from datetime import datetime
 
 
-class ConversationBuilder:
+class OldConversationBuilder:
     def __init__(self, assistant_user_id: int):
         self.assistant_user_id = assistant_user_id
 
@@ -21,7 +27,19 @@ class ConversationBuilder:
         return self._prepare_messages(chat, messages)
 
     def _prepare_messages(self, chat: Chat, messages: list[Message]) -> list[dict]:
-        conversation = [
+        conversation = []
+        for message in messages:
+            if message.type == MessageType.TOOL_CALLS:
+                conversation.extend(self._prepare_tool_call_message(message))
+            if message.type == MessageType.TEXT:
+                conversation.extend(self._prepare_message_text(message, messages))
+            if message.type == MessageType.AI_REFLECTION:
+                conversation.extend(self._prepare_ai_reflection_message(message, messages))
+            if message.type == MessageType.NOTIFICATION:
+                conversation.extend(
+                    self._prepare_notification_message(message, messages)
+                )
+        return [
             {
                 "role": "system",
                 "content": BASE_PROMPT.format(
@@ -30,44 +48,38 @@ class ConversationBuilder:
                     chat_id=chat.id,
                     chat_type=chat.type,
                     chat_title=chat.title,
-                    chat_username=chat.username
+                    chat_username=chat.username,
+                    chat_messages="\n".join(conversation),
+                    assistant_id=self.assistant_user_id,
                 ),
             }
         ]
-        for message in messages:
-            if message.type == MessageType.TOOL_CALLS:
-                conversation.extend(self._prepare_tool_call_message(message))
-            if message.type in (MessageType.AI_REFLECTION, MessageType.TEXT):
-                conversation.extend(self._prepare_message_text(message, messages))
-            if message.type == MessageType.NOTIFICATION:
-                conversation.extend(
-                    self._prepare_notification_message(message, messages)
-                )
-        return conversation
+    
+    def _prepare_ai_reflection_message(self, message: Message, messages: list[Message]) -> list[str]:
+        return [
+            AI_REFLECTION_MESSAGE_IN_CHAT.format(
+                content=message.content,
+            )
+        ]
 
-    def _prepare_tool_call_message(self, message: Message) -> list[dict]:
+    def _prepare_tool_call_message(self, message: Message) -> list[str]:
         tool_calls = message.payload["tool_calls"]
         tool_calls_results = message.payload["tool_calls_results"]
+        conversation = []
 
-        conversation = [
-            {
-                "role": "assistant",
-                "tool_calls": tool_calls,
-            }
-        ]
         for tool_call in tool_calls:
             tool_call_result = (
                 tool_calls_results[tool_call["id"]] or NOT_RESPONSE_TOOL_MESSAGE
             )
             conversation.append(
-                {
-                    "role": "tool",
-                    "content": json.dumps(tool_call_result),
-                    "tool_call_id": tool_call["id"],
-                }
+                TOOL_IN_CHAT.format(
+                    tool_name=tool_call["function"]["name"],
+                    tool_parameters=tool_call["function"]["arguments"],
+                    tool_result=json.dumps(tool_call_result),
+                )
             )
         return conversation
-    
+
     def _get_user_info(self, user: User | None) -> dict:
         user_info = {
             "username": "",
@@ -107,65 +119,79 @@ class ConversationBuilder:
         if reply_to is None:
             return ""
         
-        reply_type_content = "text"
+        content_template = TEXT_MESSAGE_CONTENT
         reply_to_content = reply_to.get("content")
         if len(reply_to_content) > 50:
-            reply_type_content = "short-text"
+            content_template = SHORT_TEXT_MESSAGE_CONTENT
             reply_to_content = reply_to_content[:50] + "..."
         if reply_to.get("type") == "quote":
-            reply_type_content = "quote"
-                
+            content_template = QUOTE_MESSAGE_CONTENT
+
         reply_to_user = self._get_reply_to_user(message, messages)
         if reply_to.get("type") == "external":
             return EXTERNAL_REPLY_IN_CHAT.format(
                 reply_to_id=reply_to.get("id"),
                 reply_to_user=reply_to_user,
-                reply_to_content=reply_to_content,
-                reply_type_content=reply_type_content
+                content=content_template.format(content=reply_to_content),
             )
         return REPLY_TO_MESSAGE_IN_CHAT.format(
             reply_to_id=reply_to.get("id"),
             reply_to_user=reply_to_user,
-            reply_to_content=reply_to_content,
-            reply_type_content=reply_type_content
+            content=content_template.format(content=reply_to_content),
         )
+
+    def _prepare_message_content(self, message: Message, messages: list[Message]) -> str:
+        content = ""
+        current_index = messages.index(message)
+        while current_index > 0:
+            message = messages[current_index]
+            payload = message.payload or {}
+            if payload.get("is_forwarded", False):
+                content += FORWARDED_TEXT_MESSAGE_CONTENT.format(content=message.content)
+                content += "\n"
+            else:
+                content += TEXT_MESSAGE_CONTENT.format(content=message.content)
+                content += "\n"
+            current_index += 1
+            if current_index >= len(messages):
+                break
+            if messages[current_index].from_user_id == message.from_user_id:
+                messages.pop(current_index - 1)
+                current_index -= 1
+                continue
+            break
+        return content
 
     def _prepare_message_text(
         self, message: Message, messages: list[Message]
-    ) -> list[dict]:
+    ) -> list[str]:
         if not message.content:
             return []
-        role = "user"
-        if message.from_user_id == self.assistant_user_id:
-            role = "assistant"
+
         return [
-            {
-                "role": role,
-                "content": TEXT_MESSAGE_IN_CHAT.format(
-                    message_id=message.telegram_id,
-                    from_user_id=message.from_user_id,
-                    from_user=USER_IN_CHAT.format(
-                        tag="from_user",
-                        user_id=message.from_user_id,
-                        **self._get_user_info(message.from_user),
-                    ),
-                    user_message=message.content,
-                    content_type=(message.payload or {}).get("is_forwarded", False) and "forwarded-text" or "text",
-                    reply_to_message=self._get_reply_to_message(message, messages),
-                    date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            TEXT_MESSAGE_IN_CHAT.format(
+                message_id=message.telegram_id,
+                from_user_id=message.from_user_id,
+                from_user=USER_IN_CHAT.format(
+                    tag="from_user",
+                    user_id=message.from_user_id,
+                    **self._get_user_info(message.from_user),
                 ),
-            }
+                content=TEXT_MESSAGE_CONTENT.format(
+                    content=message.content,
+                    content_type=(message.payload or {}).get("is_forwarded", False) and "forwarded-text" or "text",
+                ),
+                reply_to_message=self._get_reply_to_message(message, messages),
+                date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            )
         ]
 
     def _prepare_notification_message(
         self, message: Message, messages: list[Message]
-    ) -> list[dict]:
+    ) -> list[str]:
         return [
-            {
-                "role": "user",
-                "content": NOTIFICATION_MESSAGE_IN_CHAT.format(
-                    notification_message=message.content,
-                    date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                ),
-            }
+            NOTIFICATION_MESSAGE_IN_CHAT.format(
+                notification_message=message.content,
+                date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            ),
         ]
