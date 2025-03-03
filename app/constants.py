@@ -15,6 +15,11 @@ UTC: {current_time}
     <chat_title>{chat_title}</chat_title>
     <chat_username>{chat_username}</chat_username>
 </chat>
+
+Chat Structure:
+old messsage
+middle message
+new message
 """
 
 SHORT_USER_IN_CHAT = """
