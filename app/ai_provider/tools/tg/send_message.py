@@ -32,7 +32,7 @@ class SendMessage(BaseTool):
     text: str
     reply_to_message_id: int | None = None
     reply_quote: str | None = None
-    keyboard: list[list[str]] | Literal["REMOVE"] = None
+    keyboard: list[list[str]] | None = None
     inline_keyboard: list[list[Button]] | None = None
 
     async def __call__(self, bot: Bot, chat_id: int):
@@ -52,24 +52,24 @@ class SendMessage(BaseTool):
         )
         return {"message_id": message.message_id}
 
-    def _get_keyboard(self) -> InlineKeyboardMarkup | None:
-        if self.keyboard == "REMOVE":
-            return ReplyKeyboardRemove()
-        if not self.buttons or not self.buttons[0]:
+    def _get_keyboard(self) -> InlineKeyboardMarkup | ReplyKeyboardMarkup | None:
+        if not self.keyboard or not self.keyboard[0]:
             return None
-        if isinstance(self.buttons[0][0], str):
-            return ReplyKeyboardMarkup(
-                keyboard=[
-                    [KeyboardButton(text=button.text, url=button.url) for button in row]
-                    for row in self.buttons
+        if self.inline_keyboard:
+            return InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(text=button.text, url=button.url)
+                        for button in row
+                    ]
+                    for row in self.inline_keyboard
                 ]
             )
-        return InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(text=button.text, url=button.url)
-                    for button in row
-                ]
-                for row in self.buttons
-            ]
+        return ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text=button) for button in row]
+                for row in self.keyboard
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True,
         )
