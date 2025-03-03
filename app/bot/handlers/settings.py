@@ -138,10 +138,10 @@ async def adjust_setting_callback(
             "decrement_2": lambda x: x - 2,
         },
         "max_not_response_time": {
-            "increment": lambda x: x + 30,
-            "decrement": lambda x: x - 30,
-            "increment_2": lambda x: x + 60,
-            "decrement_2": lambda x: x - 60,
+            "increment": lambda x: x + 60,
+            "decrement": lambda x: x - 60,
+            "increment_2": lambda x: x + 60 * 15,
+            "decrement_2": lambda x: x - 60 * 15,
             "toggle": lambda x: 60 * 60 if x is None else None,
         },
         "min_delay_between_messages": {

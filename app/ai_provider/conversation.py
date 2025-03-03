@@ -99,7 +99,7 @@ class ConversationBuilder:
         return reply_to_user
     
     def _get_reply_to_message(self, message: Message, messages: list[Message]) -> str:
-        reply_to = message.payload.get("reply_to")
+        reply_to = (message.payload or {}).get("reply_to")
         if reply_to is None:
             return ""
         
@@ -146,7 +146,7 @@ class ConversationBuilder:
                         **self._get_user_info(message.from_user),
                     ),
                     user_message=message.content,
-                    content_type=message.payload.get("is_forwarded", False) and "forwarded-text" or "text",
+                    content_type=(message.payload or {}).get("is_forwarded", False) and "forwarded-text" or "text",
                     reply_to_message=self._get_reply_to_message(message, messages),
                     date=message.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 ),

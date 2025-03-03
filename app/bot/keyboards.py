@@ -87,25 +87,25 @@ def get_settings_keyboard(
     )
     builder.row(
         InlineKeyboardButton(
-            text="-1 min",
+            text="-15 min",
             callback_data=AdjustSettingCallbackData(
                 setting="max_not_response_time", action="decrement_2"
             ).pack(),
         ),
         InlineKeyboardButton(
-            text="-30 sec",
+            text="-1 min",
             callback_data=AdjustSettingCallbackData(
                 setting="max_not_response_time", action="decrement"
             ).pack(),
         ),
         InlineKeyboardButton(
-            text="+30 sec",
+            text="+1 min",
             callback_data=AdjustSettingCallbackData(
                 setting="max_not_response_time", action="increment"
             ).pack(),
         ),
         InlineKeyboardButton(
-            text="+1 min",
+            text="+15 min",
             callback_data=AdjustSettingCallbackData(
                 setting="max_not_response_time", action="increment_2"
             ).pack(),
