@@ -22,7 +22,7 @@ async def export_command(message: Message, db: DBReposContext, bot: Bot, db_chat
         limit=db_chat.ai_settings.messages_context_limit,
     )
     conversation = conversation_builder.build(
-        prompt=db_chat.ai_settings.prompt, messages=messages
+        chat=db_chat, messages=messages
     )
     await bot.send_document(
         message.chat.id,

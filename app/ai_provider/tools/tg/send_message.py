@@ -21,13 +21,11 @@ class Button(BaseModel):
 
 
 class SendMessage(BaseTool):
-    """
-    Send a message to a chat.
-    HTML style use tags: <b>,<strong>, <i>, <em>, <u>, <ins>, <s>, <strike>, <del>, <span class="tg-spoiler">,
-        <tg-spoiler>, <a href="http://www.example.com/">, <a href="tg://user?id=123456789">, <tg-emoji emoji-id="5368324170671202286">,
-        <code>, <pre>, <pre><code class="language-python">, <blockquote>, <blockquote expandable>
-    Do not use reply_to_message_id and reply_quote, keyboard, inline_keyboard unless absolutely necessary.
-    """
+    """Send a message to a chat. Do not use reply_to_message_id and reply_quote, keyboard, inline_keyboard unless absolutely necessary. Usage only html tag style not markdown.
+HTML style use tags: <code>, <pre>, <pre><code class="language-python">, <blockquote>, <blockquote expandable>
+  <tg-spoiler>, <a href="http://www.example.com/">, <a href="tg://user?id=123456789">, <tg-emoji emoji-id="5368324170671202286">,
+  <b>,<strong>, <i>, <em>, <u>, <ins>, <s>, <strike>, <del>, <span class="tg-spoiler">,
+"""
 
     text: str
     reply_to_message_id: int | None = None
