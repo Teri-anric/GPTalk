@@ -53,11 +53,9 @@ class SendMessage(BaseTool):
         return {"message_id": message.message_id}
 
     def _get_keyboard(self) -> InlineKeyboardMarkup | ReplyKeyboardMarkup | None:
-        if not self.keyboard or not self.keyboard[0]:
-            return None
         if self.keyboard == "REMOVE":
             return ReplyKeyboardRemove()
-        if self.inline_keyboard:
+        if self.inline_keyboard and self.inline_keyboard[0]:
             return InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
@@ -67,6 +65,8 @@ class SendMessage(BaseTool):
                     for row in self.inline_keyboard
                 ]
             )
+        if not self.keyboard or not self.keyboard[0]:
+            return None
         return ReplyKeyboardMarkup(
             keyboard=[
                 [KeyboardButton(text=button) for button in row] for row in self.keyboard
