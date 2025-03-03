@@ -1,15 +1,8 @@
-from .answer import Answer
-from .ban import Ban
-from .mute import Mute
-from .unban import Unban
-from .unmute import Unmute
-
-__all__ = ["Answer", "Ban", "Mute", "Unban", "Unmute"]
+from .send_message import SendMessage
+from .chat_member_actions import ChatMemberActions
+__all__ = ["SendMessage", "ChatMemberActions"]
 
 TELEGRAM_TOOLS = [
-    Answer,
-    Ban,
-    Mute,
-    Unban,
-    Unmute,
+    SendMessage,
+    ChatMemberActions,
 ]

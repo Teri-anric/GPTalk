@@ -66,7 +66,7 @@ class ChatRepository(BaseRepository):
         messages_context_limit: int = UNSET,
         max_not_response_time: int | None = UNSET,
         min_delay_between_messages: int | None = UNSET,
-    ):
+    ) -> ChatAISettings:
         """
         Update the AI settings for a chat.
         """
@@ -88,18 +88,19 @@ class ChatRepository(BaseRepository):
                 .where(ChatAISettings.chat_id == chat_id)
                 .values(
                     **data
-                )
+                ).returning(ChatAISettings)
             )
             await session.commit()
 
             if result.rowcount == 0:
-                await session.execute(
+                result = await session.execute(
                     insert(ChatAISettings).values(
                         chat_id=chat_id,
                         **data
-                    )
+                    ).returning(ChatAISettings)
                 )
                 await session.commit()
+            return result.scalar_one()
 
     
     async def get_updated_chats_settings(self, last_processed: datetime) -> list[ChatAISettings]:

@@ -103,7 +103,7 @@ class AIProcessor:
         )
         # Prepare messages for ai
         conversation = self.conversation_builder.build(
-            prompt=chat.ai_settings.prompt,
+            chat=chat,
             messages=reversed(messages),
         )
         logger.debug(f"Conversation by {chat.id}: {conversation}")

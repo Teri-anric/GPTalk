@@ -9,7 +9,7 @@ from app.constants import (
     SHORT_USER_IN_CHAT,
     EXTERNAL_REPLY_IN_CHAT,
 )
-from app.db import Message, MessageType, User
+from app.db import Message, MessageType, User, Chat
 from datetime import datetime
 
 
@@ -17,16 +17,20 @@ class ConversationBuilder:
     def __init__(self, assistant_user_id: int):
         self.assistant_user_id = assistant_user_id
 
-    def build(self, prompt: str, messages: list[Message]):
-        return self._prepare_messages(prompt, messages)
+    def build(self, chat: Chat, messages: list[Message]):
+        return self._prepare_messages(chat, messages)
 
-    def _prepare_messages(self, prompt: str, messages: list[Message]) -> list[dict]:
+    def _prepare_messages(self, chat: Chat, messages: list[Message]) -> list[dict]:
         conversation = [
             {
                 "role": "system",
                 "content": BASE_PROMPT.format(
-                    user_instructions=prompt,
+                    user_instructions=chat.ai_settings.prompt,
                     current_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    chat_id=chat.id,
+                    chat_type=chat.type,
+                    chat_title=chat.title,
+                    chat_username=chat.username
                 ),
             }
         ]

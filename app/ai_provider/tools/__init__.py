@@ -1,14 +1,14 @@
 from .base import BaseTool
 from .tg import TELEGRAM_TOOLS
-from .update_promt import UpdatePromt
+from .settings import UpdateSettings
 from .scheduled import Scheduled
 
-__all__ = ["BaseTool", "TELEGRAM_TOOLS", "UpdatePromt", "Scheduled", "get_tools"]
+__all__ = ["BaseTool", "TELEGRAM_TOOLS", "UpdateSettings", "Scheduled", "get_tools"]
 
 
 TOOLS: list[BaseTool] = [
     *TELEGRAM_TOOLS,
-    UpdatePromt,
+    UpdateSettings,
     Scheduled,
 ]
 

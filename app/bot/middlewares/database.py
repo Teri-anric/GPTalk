@@ -31,7 +31,7 @@ class DatabaseMiddleware(BaseMiddleware):
             return None
         return await db.chat.create_or_update_chat(
             chat_id=chat.id,
-            title=chat.title,
+            title=chat.full_name,
             username=chat.username,
             type=ChatType(chat.type),
         )
